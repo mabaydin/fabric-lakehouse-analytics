@@ -1,0 +1,13 @@
+// Semantic model sm_sales (Direct Lake on gold_* tables). gold_dim_date is marked as date table on date_key.
+
+Revenue = SUM ( gold_fact_sales[revenue] )
+Orders = DISTINCTCOUNT ( gold_fact_sales[order_id] )
+Avg Order Value = DIVIDE ( [Revenue], [Orders] )
+Revenue YTD = TOTALYTD ( [Revenue], gold_dim_date[date_key] )
+Revenue PY = CALCULATE ( [Revenue], SAMEPERIODLASTYEAR ( gold_dim_date[date_key] ) )
+Revenue vs PY % = DIVIDE ( [Revenue] - [Revenue PY], [Revenue PY] )
+Discount % = DIVIDE ( SUM ( gold_fact_sales[discount_amount] ), [Revenue] + SUM ( gold_fact_sales[discount_amount] ) )
+
+// Validation (DAX query view): 2025 -> PY blank; 2026 -> PY equals 2025 revenue for the same window
+EVALUATE
+SUMMARIZECOLUMNS ( gold_dim_date[year], "Revenue", [Revenue], "PY", [Revenue PY] )
